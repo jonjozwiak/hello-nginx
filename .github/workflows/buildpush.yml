@@ -1,0 +1,17 @@
+name: Build Docker images
+on: [push, pull_request]
+
+jobs:
+  buildpush:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        name: Check out code
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1
+        with:
+          repository: jonjozwiak/hello-nginx
+          tag_with_ref: true
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
