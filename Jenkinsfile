@@ -53,6 +53,8 @@ pipeline {
 
                 // prepare task definition file
                 sh """sed -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" -e "s;%TAG%;${env.BUILD_NUMBER};g" -e "s;%TASK_FAMILY%;${TASK_FAMILY};g" -e "s;%SERVICE_NAME%;${SERVICE_NAME};g" -e "s;%EXECUTION_ROLE_ARN%;${EXECUTION_ROLE_ARN};g" taskdef.json > taskdef-${env.BUILD_NUMBER}.json"""
+ 
+                sh """cat taskdef-${env.BUILD_NUMBER}.json"""
 
                 script {
                   withAWS(region: 'us-east-1', credentials: 'my.aws.credentials') {
