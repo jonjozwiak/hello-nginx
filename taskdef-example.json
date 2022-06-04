@@ -1,0 +1,36 @@
+{
+    "family": "hello-nginx",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::281292694180:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "image": "281292694180.dkr.ecr.us-east-1.amazonaws.com/hello-nginx:8",
+            "name": "hello-nginx",
+            "cpu": 10,
+            "memory": 256,
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 80,
+                    "protocol": "tcp"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/hello-nginx",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+   "runtimePlatform": {
+        "operatingSystemFamily": "LINUX"
+    },
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512"
+}

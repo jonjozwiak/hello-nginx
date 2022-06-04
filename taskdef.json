@@ -1,0 +1,36 @@
+{
+    "family": "%TASK_FAMILY%",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "%EXECUTION_ROLE_ARN%",
+    "containerDefinitions": [
+        {
+            "image": "%REPOSITORY_URI%/%SERVICE_NAME%:%TAG%",
+            "name": "%SERVICE_NAME%",
+            "cpu": 10,
+            "memory": 256,
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 80,
+                    "protocol": "tcp"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/%SERVICE_NAME%",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+   "runtimePlatform": {
+        "operatingSystemFamily": "LINUX"
+    },
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512"
+}

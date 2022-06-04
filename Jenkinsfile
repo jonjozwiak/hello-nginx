@@ -3,6 +3,18 @@ pipeline {
     options {
       skipStagesAfterUnstable()
     }
+    environment {
+      REPOSITORY_URI = "281292694180.dkr.ecr.us-east-1.amazonaws.com"
+      SERVICE_NAME = "hello-nginx"
+      TASK_FAMILY = "hello-nginx"
+      DESIRED_COUNT ="1"
+      CLUSTER_NAME = "hello-nginx"
+      AWS_ID = credentials("my.aws.credentials")
+      AWS_ACCESS_KEY_ID = "${env.AWS_ID_USR}"
+      AWS_SECRET_ACCESS_KEY = "${env.AWS_ID_PSW}"
+      AWS_DEFAULT_REGION = "us-east-1"
+      EXECUTION_ROLE_ARN = "arn:aws:iam::281292694180:role/ecsTaskExecutionRole"
+    }
     stages {
         stage('Clone repository') {
           steps {
@@ -11,23 +23,23 @@ pipeline {
             }
           }
         }
-        stage('Build') {
+        stage('Build Image') {
           steps {
             script {
               app = docker.build("hello-nginx")
             }
           }
         }
-        stage('Test') {
+        stage('Test Image') {
           steps {
             echo 'Empty'
           }
         }
-        stage('Push') {
+        stage('Push Image') {
           steps {
             script {
               docker.withRegistry(
-                'https://281292694180.dkr.ecr.us-east-1.amazonaws.com',
+                "https://$REPOSITORY_URI",
                 'ecr:us-east-1:my.aws.credentials') {
                   app.push("${env.BUILD_NUMBER}")
                   app.push("latest")
@@ -38,6 +50,18 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploy to Fargate' 
+
+                // prepare task definition file
+                sh """sed -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" -e "s;%TAG%;${env.BUILD_NUMBER};g" -e "s;%TASK_FAMILY%;${TASK_FAMILY};g" -e "s;%SERVICE_NAME%;${SERVICE_NAME};g" -e "s;%EXECUTION_ROLE_ARN%;${EXECUTION_ROLE_ARN};g" taskdef.json > taskdef-${env.BUILD_NUMBER}.json"""
+                script {
+                    // Register task definition
+                    AWS("ecs register-task-definition --output json --cli-input-json file://${env.WORKSPACE}/taskdef-${env.BUILD_NUMBER}.json > ${env.WORKSPACE}/temp.json")
+                    def projects = readJSON file: "${env.WORKSPACE}/temp.json"
+                    def TASK_REVISION = projects.taskDefinition.revision
+
+                    // update service
+                    AWS("ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --task-definition ${TASK_FAMILY}:${TASK_REVISION} --desired-count ${DESIRED_COUNT}")
+                }
             }
         }
     }
