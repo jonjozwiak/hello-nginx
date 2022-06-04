@@ -25,9 +25,6 @@
             }
         }
     ],
-   "runtimePlatform": {
-        "operatingSystemFamily": "LINUX"
-    },
     "requiresCompatibilities": [
         "FARGATE"
     ],
