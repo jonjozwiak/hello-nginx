@@ -33,7 +33,7 @@ on:
 
 env:
   AWS_REGION: "us-east-1"
-  ECR_REPOSITORY: "281292694180.dkr.ecr.us-east-1.amazonaws.com/hello-nginx"
+  ECR_REPOSITORY: "hello-nginx"
   ECS_SERVICE: "hello-nginx"
   ECS_CLUSTER: "hello-nginx"
   ECS_TASK_DEFINITION: taskdef-example.json 
