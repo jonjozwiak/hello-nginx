@@ -58,7 +58,8 @@ pipeline {
 
                 script {
                   withAWS(region: 'us-east-1', credentials: 'my.aws.credentials') {
-                    taskDefRegistry = readJSON text: sh(returnStdout: true, script:"aws ecs register-task-definition --output json --cli-input-json file://taskdef-${env.BUILD_NUMBER}.json > ${env.WORKSPACE}/temp.json"), returnPojo: true
+                    //taskDefRegistry = readJSON text: sh(returnStdout: true, script:"aws ecs register-task-definition --output json --cli-input-json file://taskdef-${env.BUILD_NUMBER}.json > ${env.WORKSPACE}/temp.json"), returnPojo: true
+                    taskDefRegistry = sh(returnStdout: true, script:"aws ecs register-task-definition --output json --cli-input-json file://taskdef-${env.BUILD_NUMBER}.json > ${env.WORKSPACE}/temp.json"), returnPojo: true
                     def projects = readJSON file: "${env.WORKSPACE}/temp.json"
                     def TASK_REVISION = projects.taskDefinition.revision
 
