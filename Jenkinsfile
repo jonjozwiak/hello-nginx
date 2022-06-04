@@ -1,34 +1,43 @@
 pipeline {
     agent any 
+    options {
+      skipStagesAfterUnstable()
+    }
     stages {
-        stage('Static Analysis') {
-            steps {
-                echo 'Run the static analysis to the code' 
+        stage('Clone repository') {
+          steps {
+            script { 
+              checkout scm
             }
+          }
         }
-        stage('Compile') {
-            steps {
-                echo 'Compile the source code' 
+        stage('Build') {
+          steps {
+            script {
+              app = docker.build("hello-nginx")
             }
+          }
         }
-        stage('Security Check') {
-            steps {
-                echo 'Run the security check against the application' 
+        stage('Test') {
+          steps {
+            echo 'Empty'
+          }
+        }
+        stage('Push') {
+          steps {
+            script {
+              docker.withRegistry(
+                'https://281292694180.dkr.ecr.us-east-1.amazonaws.com',
+                'ecr:us-east-1:my.aws.credentials') {
+                  app.push("${env.BUILD_NUMBER}")
+                  app.push("latest")
+                }
             }
+          }
         }
-        stage('Run Unit Tests') {
+        stage('Deploy') {
             steps {
-                echo 'Run unit tests from the source code' 
-            }
-        }
-        stage('Run Integration Tests') {
-            steps {
-                echo 'Run only crucial integration tests from the source code' 
-            }
-        }
-        stage('Publish Artifacts') {
-            steps {
-                echo 'Save the assemblies generated from the compilation' 
+                echo 'Deploy to Fargate' 
             }
         }
     }
