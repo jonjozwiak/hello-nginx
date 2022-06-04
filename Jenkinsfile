@@ -53,15 +53,21 @@ pipeline {
 
                 // prepare task definition file
                 sh """sed -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" -e "s;%TAG%;${env.BUILD_NUMBER};g" -e "s;%TASK_FAMILY%;${TASK_FAMILY};g" -e "s;%SERVICE_NAME%;${SERVICE_NAME};g" -e "s;%EXECUTION_ROLE_ARN%;${EXECUTION_ROLE_ARN};g" taskdef.json > taskdef-${env.BUILD_NUMBER}.json"""
+
                 script {
-                    // Register task definition
-                    AWS("ecs register-task-definition --output json --cli-input-json file://${env.WORKSPACE}/taskdef-${env.BUILD_NUMBER}.json > ${env.WORKSPACE}/temp.json")
+                  withAWS(region: 'us-east-1', credentials: 'my.aws.credentials') {
+                    taskDefRegistry = readJSON text: sh(returnStdout: true, script:"aws ecs register-task-definition --output json --cli-input-json file://taskdef-${env.BUILD_NUMBER}.json > ${env.WORKSPACE}/temp.json"), returnPojo: true
                     def projects = readJSON file: "${env.WORKSPACE}/temp.json"
                     def TASK_REVISION = projects.taskDefinition.revision
 
-                    // update service
-                    AWS("ecs update-service --cluster ${CLUSTER_NAME} --service ${SERVICE_NAME} --task-definition ${TASK_FAMILY}:${TASK_REVISION} --desired-count ${DESIRED_COUNT}")
+                    def updateService = "aws ecs update-service --service ${SERVICE_NAME} --cluster ${CLUSTER_NAME} --task-definition ${TASK_FAMILY}:${TASK_REVISION} --desired-count ${DESIRED_COUNT} --force-new-deployment"
+                    def runUpdateService = sh(returnStdout: true, script: updateService)
+                    def serviceStable = "aws ecs wait services-stable --service ${SERVICE_NAME} --cluster ${CLUSTER_NAME}"
+                    sh(returnStdout: true, script: serviceStable)
+                    // put all your slack messaging here
+                  }
                 }
+
             }
         }
     }
